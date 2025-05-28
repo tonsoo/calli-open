@@ -1,5 +1,12 @@
 {
     "@@locale": "en",
-    "welcome_slogan": "Free open-source music player"
+    "welcome_slogan": "Free open-source music player",
+
+    "login_errors_phone_too_short": "Phone number is too short",
+    "login_errors_phone_too_long": "Phone number is too long",
+    "login_errors_phone_invalid": "Phone number is invalid",
+    "login_errors_phone_with_invalid_characters": "Phone number contains invalid characters",
+    "login_errors_phone_empty": "Phone number can not be empty",
+    "login_hints_phone": "Type your phone"
 }
   

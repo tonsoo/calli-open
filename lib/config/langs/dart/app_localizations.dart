@@ -100,6 +100,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Free open-source music player'**
   String get welcome_slogan;
+
+  /// No description provided for @login_errors_phone_too_short.
+  ///
+  /// In en, this message translates to:
+  /// **'Phone number is too short'**
+  String get login_errors_phone_too_short;
+
+  /// No description provided for @login_errors_phone_too_long.
+  ///
+  /// In en, this message translates to:
+  /// **'Phone number is too long'**
+  String get login_errors_phone_too_long;
+
+  /// No description provided for @login_errors_phone_invalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Phone number is invalid'**
+  String get login_errors_phone_invalid;
+
+  /// No description provided for @login_errors_phone_with_invalid_characters.
+  ///
+  /// In en, this message translates to:
+  /// **'Phone number contains invalid characters'**
+  String get login_errors_phone_with_invalid_characters;
+
+  /// No description provided for @login_errors_phone_empty.
+  ///
+  /// In en, this message translates to:
+  /// **'Phone number can not be empty'**
+  String get login_errors_phone_empty;
+
+  /// No description provided for @login_hints_phone.
+  ///
+  /// In en, this message translates to:
+  /// **'Type your phone'**
+  String get login_hints_phone;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {
