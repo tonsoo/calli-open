@@ -1,5 +1,4 @@
-import 'package:audioplayers/audioplayers.dart';
-import 'package:calliopen/models/track.dart';
+import 'package:just_audio/just_audio.dart';
 
 class AudioManager {
   AudioManager() {
@@ -9,21 +8,24 @@ class AudioManager {
   late AudioPlayer _manager;
   AudioPlayer get manager => _manager;
 
-  Future<void> playTrack(Track track) async {
-    final source = track.source;
-    await play(source);
+  UriAudioSource? _source;
+
+  Future<void> setSource({UriAudioSource? source}) async {
+    source ??= _source;
+    if (source == null) return;
+    await manager.setLoopMode(LoopMode.all);
+    await manager.setAudioSources(
+      [source, source],
+      initialIndex: 0,
+      initialPosition: Duration.zero,
+    );
+    _source = source;
   }
 
-  Future<void> playAsset(String asset) async {
-    await play(AssetSource(asset));
-  }
-
-  Future<void> playUrl(String url) async {
-    await play(UrlSource(url));
-  }
-
-  Future<void> play(Source source) async {
-    await manager.play(source);
+  Future<void> play(UriAudioSource source) async {
+    await setSource(source: source);
+    await restart();
+    resume();
   }
 
   Future<void> pause() async {
@@ -31,6 +33,12 @@ class AudioManager {
   }
 
   Future<void> resume() async {
-    await manager.resume();
+    await setSource();
+    manager.play();
+  }
+
+  Future<void> restart() async {
+    manager.seek(Duration.zero);
+    await resume();
   }
 }

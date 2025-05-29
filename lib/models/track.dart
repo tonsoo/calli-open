@@ -1,10 +1,15 @@
-import 'package:audioplayers/audioplayers.dart';
+import 'dart:io';
+
+import 'package:just_audio/just_audio.dart';
+import 'package:just_audio_background/just_audio_background.dart';
 import 'package:metadata_god/metadata_god.dart';
+import 'package:path_provider/path_provider.dart';
 
 class Track {
   const Track({
     required this.title,
     required this.author,
+    required this.album,
     required this.duration,
     this.picture,
     this.localPath,
@@ -16,6 +21,7 @@ class Track {
 
   final String title;
   final String author;
+  final String album;
   final Duration duration;
   final String? url;
   final String? localPath;
@@ -28,9 +34,29 @@ class Track {
     return '$minutes:${seconds.toString().padLeft(2, '0')}';
   }
 
-  Source get source {
-    if (localPath != null) return DeviceFileSource(localPath!);
-    return UrlSource(url!);
+  Future<UriAudioSource> get source async {
+    Uri? uri;
+    try {
+      final tempDir = await getTemporaryDirectory();
+      final tempFile = File(
+          '${tempDir.path}/album_art_${DateTime.now().millisecondsSinceEpoch}.png');
+      await tempFile.writeAsBytes(picture!.data);
+      uri = Uri.file(tempFile.path);
+    } catch (e) {
+      print('failed to get album cover');
+    }
+    final media = MediaItem(
+      id: '$title.$author',
+      album: "My Awesome Album",
+      title: title,
+      artist: author,
+      artUri: uri,
+    );
+    if (localPath != null) return AudioSource.file(localPath!, tag: media);
+    return AudioSource.uri(
+      Uri.parse(url!),
+      tag: media,
+    );
   }
 
   @override
@@ -38,6 +64,7 @@ class Track {
     return {
       'title': title,
       'author': author,
+      'album': album,
       'duration': formattedDuration,
       'url': url,
       'localPath': localPath,

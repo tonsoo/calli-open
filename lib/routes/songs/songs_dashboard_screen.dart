@@ -2,7 +2,6 @@ import 'package:calliopen/components/buttons/default_button.dart';
 import 'package:calliopen/components/generic/github_project.dart';
 import 'package:calliopen/config/app_colors.dart';
 import 'package:calliopen/config/app_icons.dart';
-import 'package:calliopen/helpers/audio_manager.dart';
 import 'package:calliopen/models/track.dart';
 import 'package:calliopen/notifiers/preferences_notifier.dart';
 import 'package:calliopen/notifiers/track_notifier.dart';
@@ -14,6 +13,8 @@ class SongsDashboardScreen extends StatelessWidget {
   const SongsDashboardScreen({super.key});
 
   static const path = '/songs';
+
+  static const animationDuration = Duration(milliseconds: 200);
 
   @override
   Widget build(BuildContext context) {
@@ -28,27 +29,37 @@ class SongsDashboardScreen extends StatelessWidget {
           children: [
             Padding(
               padding: const EdgeInsets.all(15),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.start,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  _Header(),
-                  SizedBox(height: 26),
-                  _TitleWithItems(
-                    title: 'Most listened',
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.start,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        spacing: 17,
-                        children: [
-                          for (final track in tracks.tracks)
-                            _SongItem(track: track),
-                        ],
-                      )
-                    ],
-                  ),
-                ],
+              child: RefreshIndicator(
+                onRefresh: context.read<TrackNotifier>().loadFromDirectories,
+                child: ListView(
+                  children: [
+                    Column(
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        _Header(),
+                        SizedBox(height: 26),
+                        _TitleWithItems(
+                          title: 'Most listened',
+                          children: [
+                            SingleChildScrollView(
+                              scrollDirection: Axis.horizontal,
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.start,
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                spacing: 17,
+                                children: [
+                                  for (final track in tracks.tracks)
+                                    _SongItem(track: track),
+                                ],
+                              ),
+                            )
+                          ],
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
             ),
             Positioned(
@@ -110,7 +121,7 @@ class Menu extends StatelessWidget {
           _MenuItem(
             icon: AppIcons.icons.home,
             onPressed: () async =>
-                context.read<TrackNotifier>().loadTracks(context),
+                context.read<TrackNotifier>().loadLocalTracks(context),
             selected: true,
           ),
           _MenuItem(
@@ -228,7 +239,7 @@ class CurrentTrack extends StatelessWidget {
                       ),
                     ),
                     child: SvgPicture.asset(
-                      tracks.isPlaying
+                      tracks.playing
                           ? AppIcons.icons.buttons.pause
                           : AppIcons.icons.buttons.play,
                       width: 25,
@@ -254,7 +265,8 @@ class CurrentTrack extends StatelessWidget {
             height: 3,
             child: Align(
               alignment: Alignment.centerLeft,
-              child: Container(
+              child: AnimatedContainer(
+                duration: SongsDashboardScreen.animationDuration,
                 decoration: BoxDecoration(
                   color: context.themed(
                     light: AppColors.orangeMid,
@@ -466,7 +478,7 @@ class _SongItem extends StatelessWidget {
                       ),
                     ),
                     SvgPicture.asset(
-                      tracks.isPlaying
+                      tracks.playing
                           ? AppIcons.icons.buttons.pause
                           : AppIcons.icons.buttons.play,
                       width: 12,
@@ -485,7 +497,8 @@ class _SongItem extends StatelessWidget {
                       width: 30,
                       child: Align(
                         alignment: Alignment.centerLeft,
-                        child: Container(
+                        child: AnimatedContainer(
+                          duration: SongsDashboardScreen.animationDuration,
                           decoration: BoxDecoration(
                             color: AppColors.orangeMid,
                           ),

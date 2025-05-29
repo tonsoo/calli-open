@@ -8,6 +8,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:go_router/go_router.dart';
+import 'package:hive_flutter/hive_flutter.dart';
+import 'package:just_audio_background/just_audio_background.dart';
 import 'package:metadata_god/metadata_god.dart';
 import 'package:provider/provider.dart';
 
@@ -16,6 +18,12 @@ final routerKey = GlobalKey<NavigatorState>();
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   MetadataGod.initialize();
+  await Hive.initFlutter();
+  await JustAudioBackground.init(
+    androidNotificationChannelId: 'com.calliopen.audio',
+    androidNotificationChannelName: 'CalliOpen',
+    androidNotificationOngoing: true,
+  );
   runApp(MultiProvider(providers: providers, child: const MyApp()));
 }
 
