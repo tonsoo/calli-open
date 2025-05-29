@@ -36,4 +36,5 @@ final class _IconsButton extends _Folder {
   String _path() => 'assets/icons/buttons';
 
   late String play = get('play.svg');
+  late String pause = get('pause.svg');
 }

@@ -2,9 +2,13 @@ import 'package:calliopen/components/buttons/default_button.dart';
 import 'package:calliopen/components/generic/github_project.dart';
 import 'package:calliopen/config/app_colors.dart';
 import 'package:calliopen/config/app_icons.dart';
+import 'package:calliopen/helpers/audio_manager.dart';
+import 'package:calliopen/models/track.dart';
 import 'package:calliopen/notifiers/preferences_notifier.dart';
+import 'package:calliopen/notifiers/track_notifier.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:provider/provider.dart';
 
 class SongsDashboardScreen extends StatelessWidget {
   const SongsDashboardScreen({super.key});
@@ -13,6 +17,7 @@ class SongsDashboardScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final tracks = context.watch<TrackNotifier>();
     return Scaffold(
       backgroundColor: context.themed(
         light: AppColors.white,
@@ -37,17 +42,8 @@ class SongsDashboardScreen extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         spacing: 17,
                         children: [
-                          _SongItem(
-                            author: 'Jorge Riveira-Herrans',
-                            seconds: 300,
-                            title: 'Six Hundred Strike',
-                            playing: true,
-                          ),
-                          _SongItem(
-                            author: 'Tally Hall',
-                            seconds: 60 * 3 + 14,
-                            title: '&',
-                          ),
+                          for (final track in tracks.tracks)
+                            _SongItem(track: track),
                         ],
                       )
                     ],
@@ -75,7 +71,7 @@ class SongsDashboardScreen extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.end,
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    CurrentTrack(),
+                    if (tracks.currentTrack != null) CurrentTrack(),
                     Menu(),
                   ],
                 ),
@@ -113,7 +109,8 @@ class Menu extends StatelessWidget {
         children: [
           _MenuItem(
             icon: AppIcons.icons.home,
-            onPressed: () async => {},
+            onPressed: () async =>
+                context.read<TrackNotifier>().loadTracks(context),
             selected: true,
           ),
           _MenuItem(
@@ -131,12 +128,15 @@ class Menu extends StatelessWidget {
 }
 
 class CurrentTrack extends StatelessWidget {
-  const CurrentTrack({
-    super.key,
-  });
+  const CurrentTrack({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final tracks = context.read<TrackNotifier>();
+    final size = MediaQuery.of(context).size;
+    final percentageSize = (size.width * tracks.currentTrackProgress)
+        .clamp(0, size.width)
+        .toDouble();
     return DefaultButton(
       onPressed: () async => {},
       buttonStyle: TextButton.styleFrom(
@@ -175,6 +175,12 @@ class CurrentTrack extends StatelessWidget {
                   child: SizedBox(
                     width: 44,
                     height: 44,
+                    child: tracks.currentTrack?.picture != null
+                        ? Image.memory(
+                            tracks.currentTrack!.picture!.data,
+                            fit: BoxFit.cover,
+                          )
+                        : null,
                   ),
                 ),
                 Expanded(
@@ -184,7 +190,8 @@ class CurrentTrack extends StatelessWidget {
                     spacing: 4,
                     children: [
                       Text(
-                        'Six Hundred Strike',
+                        tracks.currentTrack?.title ?? '',
+                        overflow: TextOverflow.ellipsis,
                         style: TextStyle(
                           color: context.themed(
                             light: AppColors.black,
@@ -195,7 +202,7 @@ class CurrentTrack extends StatelessWidget {
                         ),
                       ),
                       Text(
-                        'Six Hundred Strike',
+                        tracks.currentTrack?.author ?? '-',
                         style: TextStyle(
                           color: context.themed(
                             light: AppColors.orangeMid,
@@ -209,14 +216,29 @@ class CurrentTrack extends StatelessWidget {
                     ],
                   ),
                 ),
-                SvgPicture.asset(
-                  AppIcons.icons.buttons.play,
-                  width: 25,
-                  height: 25,
-                  fit: BoxFit.contain,
-                  color: context.themed(
-                    light: AppColors.main,
-                    dark: AppColors.orangeMid,
+                IntrinsicWidth(
+                  child: DefaultButton(
+                    onPressed: () async => tracks.toggle(),
+                    buttonStyle: TextButton.styleFrom(
+                      backgroundColor: Colors.transparent,
+                      foregroundColor: Colors.transparent,
+                      padding: EdgeInsets.symmetric(
+                        vertical: 11,
+                        horizontal: 15,
+                      ),
+                    ),
+                    child: SvgPicture.asset(
+                      tracks.isPlaying
+                          ? AppIcons.icons.buttons.pause
+                          : AppIcons.icons.buttons.play,
+                      width: 25,
+                      height: 25,
+                      fit: BoxFit.contain,
+                      color: context.themed(
+                        light: AppColors.main,
+                        dark: AppColors.orangeMid,
+                      ),
+                    ),
                   ),
                 )
               ],
@@ -239,7 +261,7 @@ class CurrentTrack extends StatelessWidget {
                     dark: AppColors.orangeMid,
                   ),
                 ),
-                width: 50,
+                width: percentageSize,
               ),
             ),
           ),
@@ -298,26 +320,32 @@ class _MenuItem extends StatelessWidget {
 }
 
 class _SongItem extends StatelessWidget {
-  const _SongItem({
-    super.key,
-    required this.author,
-    required this.title,
-    required this.seconds,
-    this.playing = false,
-  });
+  const _SongItem({super.key, required this.track});
 
-  final String author;
-  final String title;
-  final int seconds;
-  final bool playing;
+  final Track track;
 
   @override
   Widget build(BuildContext context) {
-    final minutes = (seconds / 60).round().toString();
-    final s = (seconds % 60).round().toString().padLeft(2, '0');
+    final tracks = context.read<TrackNotifier>();
+    final playing = tracks.currentTrack == track;
+
+    String time = '';
+    if (playing) {
+      final totalSeconds = tracks.currentTrackDuration.inSeconds;
+      int minutes = (totalSeconds / 60).round();
+      int seconds = (totalSeconds % 60).round();
+      time = '$minutes:${seconds.toString().padLeft(2, '0')}';
+    }
+
     return IntrinsicWidth(
       child: DefaultButton(
-        onPressed: () async => {},
+        onPressed: () async {
+          if (!playing) {
+            tracks.play(track);
+          } else {
+            tracks.toggle();
+          }
+        },
         buttonStyle: TextButton.styleFrom(
           backgroundColor: context.themed(
             light: AppColors.white,
@@ -355,10 +383,16 @@ class _SongItem extends StatelessWidget {
                 child: Container(
                   decoration: BoxDecoration(
                     color: context.themed(
-                      light: AppColors.black,
-                      dark: AppColors.white,
+                      light: AppColors.whiteMid,
+                      dark: AppColors.black100,
                     ),
                   ),
+                  child: track.picture != null
+                      ? Image.memory(
+                          track.picture!.data,
+                          fit: BoxFit.cover,
+                        )
+                      : Container(),
                 ),
               ),
               SizedBox(height: 4),
@@ -369,7 +403,7 @@ class _SongItem extends StatelessWidget {
                 children: [
                   Expanded(
                     child: Text(
-                      author,
+                      track.author,
                       style: TextStyle(
                         color: context.themed(
                           light: AppColors.whiteMid,
@@ -383,7 +417,8 @@ class _SongItem extends StatelessWidget {
                   ),
                   IntrinsicWidth(
                     child: Text(
-                      '$minutes:$s',
+                      track.formattedDuration,
+                      overflow: TextOverflow.ellipsis,
                       style: TextStyle(
                         color: context.themed(
                           light: AppColors.black,
@@ -398,7 +433,7 @@ class _SongItem extends StatelessWidget {
               ),
               SizedBox(height: 6),
               Text(
-                title,
+                track.title,
                 textAlign: TextAlign.center,
                 overflow: TextOverflow.ellipsis,
                 style: TextStyle(
@@ -419,7 +454,7 @@ class _SongItem extends StatelessWidget {
                   children: [
                     IntrinsicWidth(
                       child: Text(
-                        '01:42',
+                        time,
                         style: TextStyle(
                           color: context.themed(
                             light: AppColors.main,
@@ -431,7 +466,9 @@ class _SongItem extends StatelessWidget {
                       ),
                     ),
                     SvgPicture.asset(
-                      AppIcons.icons.buttons.play,
+                      tracks.isPlaying
+                          ? AppIcons.icons.buttons.pause
+                          : AppIcons.icons.buttons.play,
                       width: 12,
                       height: 12,
                       fit: BoxFit.contain,
@@ -452,7 +489,8 @@ class _SongItem extends StatelessWidget {
                           decoration: BoxDecoration(
                             color: AppColors.orangeMid,
                           ),
-                          width: 15,
+                          width:
+                              (30 * tracks.currentTrackProgress).clamp(0, 30),
                         ),
                       ),
                     ),
