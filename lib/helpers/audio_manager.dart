@@ -33,7 +33,6 @@ class AudioManager {
   }
 
   Future<void> resume() async {
-    await setSource();
     manager.play();
   }
 

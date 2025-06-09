@@ -285,7 +285,6 @@ class CurrentTrack extends StatelessWidget {
 
 class _MenuItem extends StatelessWidget {
   const _MenuItem({
-    super.key,
     required this.icon,
     required this.onPressed,
     this.selected = false,
@@ -332,7 +331,7 @@ class _MenuItem extends StatelessWidget {
 }
 
 class _SongItem extends StatelessWidget {
-  const _SongItem({super.key, required this.track});
+  const _SongItem({required this.track});
 
   final Track track;
 
@@ -519,7 +518,6 @@ class _SongItem extends StatelessWidget {
 
 class _TitleWithItems extends StatelessWidget {
   const _TitleWithItems({
-    super.key,
     required this.title,
     this.children = const [],
   });
@@ -552,9 +550,7 @@ class _TitleWithItems extends StatelessWidget {
 }
 
 class _Header extends StatelessWidget {
-  const _Header({
-    super.key,
-  });
+  const _Header();
 
   @override
   Widget build(BuildContext context) {
@@ -600,9 +596,7 @@ class _Header extends StatelessWidget {
 }
 
 class _HeaderLogo extends StatelessWidget {
-  const _HeaderLogo({
-    super.key,
-  });
+  const _HeaderLogo();
 
   @override
   Widget build(BuildContext context) {

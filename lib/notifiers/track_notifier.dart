@@ -174,8 +174,6 @@ class TrackNotifier extends ChangeNotifier {
     currentTrack = track;
     completedTrack = false;
     _audio.play(await track.source);
-    currentTrack = track;
-    // TODO: next track?
   }
 
   Future<void> pause() async {
