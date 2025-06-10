@@ -180,13 +180,17 @@ class TrackNotifier extends ChangeNotifier {
     await _audio.pause();
   }
 
+  Future<void> resume() async {
+    await _audio.resume();
+  }
+
   Future<void> toggle() async {
     if (playing) {
-      await _audio.pause();
+      await pause();
     } else if (completedTrack && currentTrack != null) {
       play(currentTrack!);
     } else {
-      _audio.resume();
+      resume();
     }
   }
 
@@ -210,5 +214,16 @@ class TrackNotifier extends ChangeNotifier {
     } else if (_tracks.isNotEmpty) {
       await play(_tracks.last);
     }
+  }
+
+  Future<void> moveTrackPointer(Duration duration) async {
+    await _audio.movePointer(duration);
+  }
+
+  Future<void> moveTrackPercentace(double percentage) async {
+    if (currentTrack?.duration == null) return;
+
+    final duration = currentTrack!.duration * percentage;
+    await _audio.movePointer(duration);
   }
 }

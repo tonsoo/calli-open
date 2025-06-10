@@ -10,6 +10,7 @@ class DefaultButton extends StatefulWidget {
     this.showLoading = true,
     this.loadingStyle,
     this.loadingOpacity = 0,
+    this.clipBehavior = Clip.hardEdge,
     required this.child,
   });
 
@@ -19,6 +20,7 @@ class DefaultButton extends StatefulWidget {
   final bool showLoading;
   final LoadingStyle? loadingStyle;
   final double loadingOpacity;
+  final Clip clipBehavior;
 
   @override
   State<DefaultButton> createState() => DefaultButtonState();
@@ -69,6 +71,7 @@ class DefaultButtonState extends State<DefaultButton> {
           children: [
             TextButton(
               onPressed: click,
+              clipBehavior: widget.clipBehavior,
               style: (widget.buttonStyle ?? TextButton.styleFrom()).merge(
                 TextButton.styleFrom(
                   backgroundColor: context.themed(

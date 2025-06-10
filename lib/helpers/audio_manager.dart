@@ -40,4 +40,8 @@ class AudioManager {
     manager.seek(Duration.zero);
     await resume();
   }
+
+  Future<void> movePointer(Duration position) async {
+    await manager.seek(position);
+  }
 }

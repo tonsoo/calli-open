@@ -8,6 +8,10 @@ import 'package:calliopen/notifiers/track_notifier.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:provider/provider.dart';
+import 'package:t_slider/t_slider/t_range.dart';
+import 'package:t_slider/t_slider/t_slider.dart';
+import 'package:t_slider/t_slider/t_slider_configuration.dart';
+import 'package:t_slider/t_slider/t_slider_track_style.dart';
 
 class SongsDashboardScreen extends StatelessWidget {
   const SongsDashboardScreen({super.key});
@@ -67,6 +71,7 @@ class SongsDashboardScreen extends StatelessWidget {
               right: 0,
               bottom: 0,
               child: Container(
+                clipBehavior: Clip.none,
                 decoration: BoxDecoration(
                   border: Border(
                     top: BorderSide(
@@ -144,22 +149,13 @@ class CurrentTrack extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tracks = context.read<TrackNotifier>();
-    final size = MediaQuery.of(context).size;
-    final percentageSize = (size.width * tracks.currentTrackProgress)
-        .clamp(0, size.width)
-        .toDouble();
-    return DefaultButton(
-      onPressed: () async => {},
-      buttonStyle: TextButton.styleFrom(
-        backgroundColor: context.themed(
+    return Container(
+      clipBehavior: Clip.none,
+      decoration: BoxDecoration(
+        color: context.themed(
           light: AppColors.orangeWeak,
           dark: AppColors.black100,
         ),
-        foregroundColor: context.themed(
-          light: AppColors.black,
-          dark: AppColors.white,
-        ),
-        padding: EdgeInsets.all(0),
       ),
       child: Column(
         children: [
@@ -173,60 +169,7 @@ class CurrentTrack extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.center,
               spacing: 10,
               children: [
-                Container(
-                  decoration: BoxDecoration(
-                    color: context.themed(
-                      light: AppColors.black,
-                      dark: AppColors.white,
-                    ),
-                    borderRadius: BorderRadius.all(
-                      Radius.circular(4),
-                    ),
-                  ),
-                  child: SizedBox(
-                    width: 44,
-                    height: 44,
-                    child: tracks.currentTrack?.picture != null
-                        ? Image.memory(
-                            tracks.currentTrack!.picture!.data,
-                            fit: BoxFit.cover,
-                          )
-                        : null,
-                  ),
-                ),
-                Expanded(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    spacing: 4,
-                    children: [
-                      Text(
-                        tracks.currentTrack?.title ?? '',
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          color: context.themed(
-                            light: AppColors.black,
-                            dark: AppColors.white,
-                          ),
-                          fontSize: 17,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      Text(
-                        tracks.currentTrack?.author ?? '-',
-                        style: TextStyle(
-                          color: context.themed(
-                            light: AppColors.orangeMid,
-                            dark: AppColors.main,
-                          ),
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      SizedBox(height: 8)
-                    ],
-                  ),
-                ),
+                Expanded(child: _CurrentTrackInformation(tracks: tracks)),
                 IntrinsicWidth(
                   child: DefaultButton(
                     onPressed: () async => tracks.toggle(),
@@ -256,25 +199,118 @@ class CurrentTrack extends StatelessWidget {
             ),
           ),
           Container(
-            decoration: BoxDecoration(
-              color: context.themed(
-                light: AppColors.whiteMid,
-                dark: AppColors.white,
+            height: 5,
+            clipBehavior: Clip.none,
+            child: TSlider(
+              onDragged: (value) {
+                tracks.moveTrackPercentace(value);
+                tracks.resume();
+              },
+              background: TSliderTrackStyle(
+                color: context.themed(
+                  light: AppColors.whiteMid,
+                  dark: AppColors.white,
+                ),
               ),
-            ),
-            height: 3,
-            child: Align(
-              alignment: Alignment.centerLeft,
-              child: AnimatedContainer(
-                duration: SongsDashboardScreen.animationDuration,
-                decoration: BoxDecoration(
+              primary: TSliderConfiguration(
+                value: tracks.currentTrackProgress,
+                range: TRange(min: 0, max: 1),
+                trackStyle: TSliderTrackStyle(
                   color: context.themed(
                     light: AppColors.orangeMid,
                     dark: AppColors.orangeMid,
                   ),
                 ),
-                width: percentageSize,
               ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _CurrentTrackInformation extends StatelessWidget {
+  const _CurrentTrackInformation({
+    super.key,
+    required this.tracks,
+  });
+
+  final TrackNotifier tracks;
+
+  @override
+  Widget build(BuildContext context) {
+    return DefaultButton(
+      onPressed: () async => {},
+      clipBehavior: Clip.none,
+      buttonStyle: TextButton.styleFrom(
+        backgroundColor: context.themed(
+          light: AppColors.orangeWeak,
+          dark: AppColors.black100,
+        ),
+        foregroundColor: context.themed(
+          light: AppColors.black,
+          dark: AppColors.white,
+        ),
+        padding: EdgeInsets.all(0),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        spacing: 10,
+        children: [
+          Container(
+            decoration: BoxDecoration(
+              color: context.themed(
+                light: AppColors.black,
+                dark: AppColors.white,
+              ),
+              borderRadius: BorderRadius.all(
+                Radius.circular(4),
+              ),
+            ),
+            child: SizedBox(
+              width: 44,
+              height: 44,
+              child: tracks.currentTrack?.picture != null
+                  ? Image.memory(
+                      tracks.currentTrack!.picture!.data,
+                      fit: BoxFit.cover,
+                    )
+                  : null,
+            ),
+          ),
+          Expanded(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              spacing: 4,
+              children: [
+                Text(
+                  tracks.currentTrack?.title ?? '',
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    color: context.themed(
+                      light: AppColors.black,
+                      dark: AppColors.white,
+                    ),
+                    fontSize: 17,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                Text(
+                  tracks.currentTrack?.author ?? '-',
+                  style: TextStyle(
+                    color: context.themed(
+                      light: AppColors.orangeMid,
+                      dark: AppColors.main,
+                    ),
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                SizedBox(height: 8)
+              ],
             ),
           ),
         ],
